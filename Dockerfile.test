@@ -1,0 +1,6 @@
+FROM node:12-alpine3.14 as builder
+
+WORKDIR /usr/src/app/
+USER root
+COPY ./ ./
+CMD [ "sh" ]

@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  ant-design-pro_dev:
+    build:
+      context: ..
+      dockerfile: Dockerfile.dev
+    ports:
+      - 8009:8009
+    volumes:
+      - E:/fileDownload:xxx
+    container_name: 'ant-design-pro_dev'

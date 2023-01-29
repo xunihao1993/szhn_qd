@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  yhsc_antd:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: yhsc_antd:xxx
+    ports:
+      - 80:80
+    volumes:
+      - xxx:xxx
+    container_name: 'yhsc_antd'

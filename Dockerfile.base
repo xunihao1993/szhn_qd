@@ -1,0 +1,11 @@
+FROM node:14-alpine3.14 as builder
+
+WORKDIR /usr/src/app/
+USER root
+COPY package.json ./
+COPY yarn.lock /usr/src/app/yarn.lock
+RUN yarn --registry https://registry.npm.taobao.org/
+
+COPY ./ ./
+
+RUN npm run build
