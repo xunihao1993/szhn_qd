@@ -13,7 +13,7 @@ export default defineConfig({
     babelOptions: {},
   },
   define: {
-    'process.env.REQUST_BASE_URL': 'http://lxjhua.top:8088',
+    'process.env.REQUST_BASE_URL': 'http://127.0.0.1:8088',
     'process.env.iconUrl': 'xx',
   },
 });
