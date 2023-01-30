@@ -42,12 +42,12 @@
       },
     ],
   },
-  {
-    path: '/paymentRecords',
-    name: '图书借阅',
-    icon: 'crown',
-    component: './Payment',
-  },
+  // {
+  //   path: '/paymentRecords',
+  //   name: '图书借阅',
+  //   icon: 'crown',
+  //   component: './Payment',
+  // },
   {
     name: '图书管理',
     icon: 'table',
@@ -55,8 +55,8 @@
     // component: './TableList',
     routes: [
       {path: '/lease/overview', name: '全部', icon: 'crow', component: './lease/overview'},
-      {path: '/lease/westernArea', name: '外文图书', icon: 'crow', component: './lease/overview'},
-      {path: '/lease/eastArea', name: '中文图书', icon: 'crow', component: './lease/overview'},
+      {path: '/lease/westernArea', name: '中文图书', icon: 'crow', component: './lease/overview'},
+      {path: '/lease/eastArea', name: '外文图书', icon: 'crow', component: './lease/overview'},
     ],
   },
   {
@@ -74,7 +74,7 @@
 
   {
     path: '/',
-    redirect: '/welcome',
+    redirect: '/lease/overview',
   },
   {
     component: './404',

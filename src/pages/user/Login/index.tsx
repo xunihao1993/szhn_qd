@@ -50,12 +50,12 @@ const Login: React.FC = () => {
     setSubmitting(true);
     try {
       // 登录
-      console.log('登录接口测试开始')
-      const msg = await login({ ...values, type });
+      console.log('登录接口测试开始', values)
+      const msg = await login({ ...values });
       console.log('登录接口测试结束')
       console.log(msg)
       if (msg.resSuccess) {
-        var token = msg.data
+        var token = msg.data.access_token
         console.log('登录成功',msg.data)
         localStorage.setItem("token", `${token}`)
         const defaultloginSuccessMessage = intl.formatMessage({
@@ -69,7 +69,7 @@ const Login: React.FC = () => {
         console.log(history.location.pathname);
         console.log(history.location.search);
         console.log(history.location.hash);
-        window.location.replace("/welcome")
+        window.location.replace("/lease/overview")
         // console.log("跳转完成22222")
         // await fetchUserInfo();
         // if (!history) return;

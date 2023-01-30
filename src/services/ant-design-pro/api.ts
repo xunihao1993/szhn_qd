@@ -6,7 +6,7 @@ import { request } from 'umi';
 export async function currentUser(options?: { [key: string]: any }) {
   return request<{
     data: API.CurrentUser;
-  }>('/api/user/get_user_info/', {
+  }>('/oauth/user/info', {
     method: 'GET',
     ...(options || {}),
   });
@@ -27,7 +27,8 @@ export async function login(body: API.LoginParams, options?: { [key: string]: an
     const test = request<API.LoginResult>('/oauth/login', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json',/*  */
+        'Authorization':null,
       },
       data: body,
       ...(options || {}),
@@ -45,46 +46,3 @@ export async function getNotices(options?: { [key: string]: any }) {
   });
 }
 
-/** 获取规则列表 GET /api/rule */
-export async function rule(
-  params: {
-    // query
-    /** 当前的页码 */
-    current?: number;
-    /** 页面的容量 */
-    pageSize?: number;
-  },
-  options?: { [key: string]: any },
-) {
-  return request<API.RuleList>('/api/rule', {
-    method: 'GET',
-    params: {
-      ...params,
-    },
-    ...(options || {}),
-  });
-}
-
-/** 新建规则 PUT /api/rule */
-export async function updateRule(options?: { [key: string]: any }) {
-  return request<API.RuleListItem>('/api/rule', {
-    method: 'PUT',
-    ...(options || {}),
-  });
-}
-
-/** 新建规则 POST /api/rule */
-export async function addRule(options?: { [key: string]: any }) {
-  return request<API.RuleListItem>('/api/rule', {
-    method: 'POST',
-    ...(options || {}),
-  });
-}
-
-/** 删除规则 DELETE /api/rule */
-export async function removeRule(options?: { [key: string]: any }) {
-  return request<Record<string, any>>('/api/rule', {
-    method: 'DELETE',
-    ...(options || {}),
-  });
-}

@@ -23,6 +23,9 @@ import ProTable, { TableDropdown } from '@ant-design/pro-table';
 import { useModel, useRequest, history } from 'umi';
 import {
   getPaymentRecords,
+  sysUserAdd,
+  sysUserDeleteById
+
 } from '@/services/ant-design-pro/lease';
 import { changeToChinese } from '@/toolkit/publicUtil'
 // import { get_month_num_format } from '@/toolkit/publicUtil';
@@ -71,7 +74,7 @@ export default () => {
       name: string;
       color: string;
     }[];
-    id?:number;
+    id?: number;
     state?: string;
     comments?: number;
     updated_at?: string;
@@ -141,27 +144,76 @@ export default () => {
     dueToState: ["payOverdue", "payAlmostHere", "contractOverdue", "contractAlmostHere"],
     sendMessage: false
   });
+  //新建功能(第一步表单)
+  const [formRef1] = Form.useForm();
+  //新建功能(第二表单)
+  const [formRef2] = Form.useForm();
 
-    // 颜色名称相关枚举
-    const nameColor = (key: any) => {
-      if (key == 'addUnderway') {
-        return { name: '新增出租房屋', color: 'red' };
-      } else if (key == 'rentOut') {
-        return { name: '出租', color: 'magenta' };
-      } else if (key == 'payment') {
-        return { name: '续费(缴费)', color: 'green' };
-      } else if (key == 'paymentSupplement') {
-        return { name: '缴费(续费)-补款', color: 'cyan' };
-      } else if (key == 'clockAuto') {
-        return { name: '定时自动生成预缴费', color: 'purple' };
-      }else if (key == 'xj') {
-        return { name: '现金', color: 'purple' };
-      }else if (key == 'yh') {
-        return { name: '银行', color: 'purple' };
-      }else {
-        return { name: '未知', color: '#f50' };
-      }
-    };
+  // 新建功能表单初始化参数
+  const fromDataInit: GithubIssueItem = {
+    username: null,
+    password: null,
+    juese: "xuesheng",
+    bookType: null
+  };
+  // 归还/借阅功能表单初始化参数
+  const reletFromDataInit = {
+    ...fromDataInit,
+
+  };
+  // 重置相关初始化useState数据
+  const reset_init_data = (reset_select = true) => {
+    // reset_select:是否重置查询
+    setFromData(fromDataInit);
+
+
+    // 刷新数据
+    if (reset_select) {
+      actionRef.current?.reload();
+
+    }
+  };
+  // 跳转说明
+  const windowsOpen = (leaseStatus: any) => {
+    // 新录入图书信息功能
+    if (leaseStatus == "addHouse") {
+      window.open("https://www.yuque.com/eggdan/il28ya?# 《数字海南--图书管理系统笔试题》")
+    } else if (leaseStatus == "rentOut") {
+      // 出租
+      window.open("https://www.yuque.com/eggdan/il28ya?# 《数字海南--图书管理系统笔试题》")
+    } else if (leaseStatus == "relet") {
+      // 续租(合同续约)
+      window.open("https://www.yuque.com/eggdan/il28ya?# 《数字海南--图书管理系统笔试题》")
+    } else if (leaseStatus == "payment") {
+      // 续费
+      window.open("https://www.yuque.com/eggdan/il28ya?# 《数字海南--图书管理系统笔试题》")
+    } else if (leaseStatus == "surrender") {
+      // 删除图书
+      window.open("https://www.yuque.com/eggdan/il28ya?# 《数字海南--图书管理系统笔试题》")
+    }
+  }
+  // 新建功能表单值
+  const [fromData, setFromData] = useState({ ...fromDataInit });
+  // 颜色名称相关枚举
+  const nameColor = (key: any) => {
+    if (key == '管理员') {
+      return { name: '管理员', color: 'red' };
+    } else if (key == '学生') {
+      return { name: '学生', color: 'green' };
+    } else if (key == 'payment') {
+      return { name: '续费(缴费)', color: 'green' };
+    } else if (key == 'paymentSupplement') {
+      return { name: '缴费(续费)-补款', color: 'cyan' };
+    } else if (key == 'clockAuto') {
+      return { name: '定时自动生成预缴费', color: 'purple' };
+    } else if (key == 'xj') {
+      return { name: '现金', color: 'purple' };
+    } else if (key == 'yh') {
+      return { name: '银行', color: 'purple' };
+    } else {
+      return { name: '未知', color: '#f50' };
+    }
+  };
 
   const leaseStatusMap = {
     all: {
@@ -189,115 +241,13 @@ export default () => {
       status: 'idle',
     },
   };
-  // 打印
-  const printFun = (record:any)=>{
-    function toDecimal2(x:any) {
-      var f = parseFloat(x);
-      if (isNaN(f)) {
-       return false;
-      }
-      var f = Math.round(x*100)/100;
-      var s = f.toString();
-      var rs = s.indexOf('.');
-      if (rs < 0) {
-       rs = s.length;
-       s += '.';
-      }
-      while (s.length <= rs + 2) {
-       s += '0';
-      }
-      return s;
-     }
-    var Window = window.open("页面打印", "页面打印", "toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=yes, copyhistory=no");
-    var style = `    <style type='text/css'>
-    .main{width: 960px; height: 480px; margin: 0px auto; margin-top: 20px; padding: 10px; display: flex;}
-    .body{width: 95%; height: 480px;}
-    .title{width: 100%; height: 40px; display: flex;}
-    .title .div1{width: 60%; text-align: right;}
-    .title .div1 .divCtn{width: 230px; height: 40px; float: right;}
-    .title .div1 .divCtn .titleCtn{width: 230px; height: 30px; line-height: 30px;text-align: center; font-size: 25px; font-weight: bold;}
-    .title .div1 .divCtn .titleUdeLine{width: 280px; height: 6px; border-bottom: solid 2px #000000; border-top: solid 2px #000000;}
-    .title .div2{width: 40%; text-align: right; height: 40px; line-height: 30px; font-size: 20px; font-weight: bold;}
-    .date{width: 100%; height: 40px; display: flex;}
-    .date .deDiv1{width: 60%; height: 40px; line-height: 40px; text-align: right; font-size: 18px;}
-    .date .deDiv2{width: 40%; height: 40px;line-height: 40px;  text-align: right;font-size: 18px;}
-    .tempTr1 td{text-align: center;}
-    table tr td{padding: 5px;}
-    .tempTr2 td{height: 40px; text-align: center;}
-    .end{width: 5%; height: 480px; }
-</style>`;
-    var user_name = record.userName // 承租人
-    var receipt_id = record.receiptId  // 收据单号
-    var create_year = moment().year()  // 年
-    var create_month = moment().format("MM") // 月
-    var create_date = moment().format("DD") // 日
-    var paymentMethod = nameColor("xj").name   // 缴费方式
-    var leaseFullName = record.leaseFullName  // 门牌号标题
-    // var moneyCollection =  Math.round(record.moneyCollection*Math.pow(10, 2))/Math.pow(10, 2); // 收款金额
-    var moneyCollection =  toDecimal2(record.moneyCollection); // 收款金额
-    var moneyCollectionCn = changeToChinese(moneyCollection.toString()) // 大写收款金额
-    var paymentStartDate = record.paymentStartDate  // 缴费开始时间
-    var paymentEndDate = record.paymentEndDate    // 缴费结束时间
-    var content = `
-<div class="main">
-<div class="body">
-  <div class="title">
-    <div class="div1">
-      <div class="divCtn">
-        <div class="titleCtn">收&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;款&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;收&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;据</div>
-        <div class="titleUdeLine"></div>
-      </div>
-    </div>
-  </div>
-  <div class="date">
-    <div class="deDiv1">${create_year}年&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${create_month}月&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${create_date}日</div>
-    <div class="deDiv2">NO：<span style="color: #000000;">${receipt_id.toString().padStart(8,"0")}</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-  </div>
-  <table border="1" style="width: 100%; border-collapse: collapse;">
-    <td>
-      <div style="height: 25px;">&nbsp; </div>
-      <div style=" display: flex;"><div style="font-size: 20px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;今&nbsp;&nbsp;收&nbsp;&nbsp;到</div><div style="width: 75%; height: 30px; border-bottom: solid #000000 1px; text-align: center;font-size: 20px;">${user_name}</div></div>
+  // 新建分步表单开关
+  const [visible, setVisible] = useState(false);
 
-      <div style="height: 14px;">&nbsp; </div>
-      <div style=" display: flex;"><div style="font-size: 20px;">&nbsp;&nbsp;交&nbsp;&nbsp;&nbsp;&nbsp;来：</div><div style="width: 85%; height: 30px; border-bottom: solid #000000 1px;font-size: 20px;">&nbsp;&nbsp;椰海粮油交易市场${leaseFullName}(${paymentStartDate}至${paymentEndDate})</div></div>
-
-      <div style="height: 14px;">&nbsp; </div>
-      <div style=" display: flex;"><div style="font-size: 20px;">&nbsp;&nbsp;金额(大写)</div><div style="width: 85%; height: 30px; border-bottom: solid #000000 1px; font-size: 20px;">&nbsp;&nbsp;${moneyCollectionCn}</div></div>
-
-      <div style="height: 14px;">&nbsp; </div>
-      <div style=" display: flex;">
-      <div style="font-size: 20px;">&nbsp;&nbsp;￥：</div><div style="width: 20%; height: 30px; border-bottom: solid #000000 1px; ">${moneyCollection}</div>
-      <div style="font-size: 20px;">&nbsp;&nbsp;&nbsp;&nbsp;缴费方式：</div><div style="width: 10%; height: 30px; border-bottom: solid #000000 1px; text-align: center;">${paymentMethod}</div>
-      <div style="font-size: 10px; margin-top:10px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;收款单位(盖章)</div>
-      </div>
-      <div style="height: 5px;">&nbsp; </div>
-      </td>
-  </table>
-  <div style="width: 100%; display: flex; height: 40px; font-size: 13px;">
-    <div style="width: 50%; height: 40px; line-height: 40px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;核准：</div>
-    <div style="width: 50%; height: 40px; line-height: 40px;">会计：</div>
-    <div style="width: 50%; height: 40px; line-height: 40px;">记账：</div>
-    <div style="width: 50%; height: 40px; line-height: 40px;">出纳：林淑爱</div>
-    <div style="width: 50%; height: 40px; line-height: 40px;">经手人：</div>
-
-
-
-  </div>
-</div>
-<div class="end"><div style="margin-top: 80px; text-align: center; height: 230px;width: 100%; font-size: 10px;">①<br/>存<br/>根<br/>(白)<br/>②<br/>交<br/>对<br/>方<br/>(红)<br/>③<br/>财<br/>务<br/>(黄)</div></div>
-</div>
-
-    `
-    Window.document.write(content + style);
-    Window.focus();
-    Window.document.close();     //关闭document的输出流, 显示选定的数据
-    Window.print();               //打印当前窗口
-    Window.close()  // 关闭窗口
-
-  }
-
-
-
+  // 归还/借阅功能表单值
+  const [reletFromData, setReletFromData] = useState({ ...reletFromDataInit });
+  // 归还/借阅(合同续约)分步表单开关
+  const [reletVisible, setReletVisible] = useState(false);
   // 租赁概要信息查询
   const columns: ProColumns<GithubIssueItem>[] = [
     // {
@@ -306,14 +256,14 @@ export default () => {
     //   width: 48,
     // },
     {
-      title: '标题',
+      title: '用户名',
       width: 150,
-      dataIndex: 'leaseFullName',
+      dataIndex: 'username',
       // copyable: true, //是否支持复制
       // ellipsis: true, //标题过长会自动收缩
       hideInSearch: true,
-      editable:false, // 是否可编辑
-      fixed: 'left',
+      editable: false, // 是否可编辑
+      // fixed: 'left',
       tip: '标题过长会自动收缩',
       formItemProps: {
         rules: [
@@ -323,29 +273,24 @@ export default () => {
           },
         ],
       },
-      // render: (_, record) => {
-      //   return (
-      //     <CheckableTag
-      //       style={{ fontSize: 14 }}
-      //       checked={false}
-      //       onChange={() => {
-      //         // console.log('测试标题点击事件');
-      //         // setOriginData({ ...record });
-      //         // setHistorySelectParams({ key: record?.key });
-      //         // setDrawerVisible(true);
-      //       }}
-      //     >
-      //       {_}
-      //     </CheckableTag>
-      //   );
-      // },
     },
     {
-      title: '来源方式',
+      title: '创建时间',
+      dataIndex: 'createTime',
+      // fixed: 'left',
+      width: 150,
+      editable: false, // 是否可编辑
+      // copyable: true, // 是否复制
+      hideInSearch: true, // 查询表单中不展示此项
+      // hideInTable:true, // 在查询表格不显示
+      valueType: 'dateTime',
+    },
+    {
+      title: '权限列表',
       width: 120,
-      dataIndex: 'createMethods',
-      fixed: 'left',
-      editable:false, // 是否可编辑
+      dataIndex: 'roleList',
+      // fixed: 'left',
+      editable: false, // 是否可编辑
       // copyable: true, // 是否复制
       hideInSearch: true, // 查询表单中不展示此项
       // hideInTable:true, // 在查询表格不显示
@@ -355,334 +300,6 @@ export default () => {
         </Space>
       ),
     },
-    {
-      title: '缴费时间',
-      dataIndex: 'createTime',
-      fixed: 'left',
-      width: 150,
-      editable:false, // 是否可编辑
-      // copyable: true, // 是否复制
-      hideInSearch: true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-      valueType: 'dateTime',
-    },
-    {
-      title: '区域',
-      order: 100,
-      dataIndex: 'region',
-      // hideInSearch: urlName == 'overview' ? false : true, // 查询表单中不展示此项
-      hideInTable: true, // 在查询表格不显示
-      filters: true,
-      onFilter: true,
-      editable:false, // 是否可编辑
-      valueType: 'select',
-      initialValue: 'all',
-      valueEnum: {
-        all: { text: '全部', status: 'Default' },
-        1: {
-          text: '东区',
-          status: 1,
-        },
-        2: {
-          text: '西区',
-          status: 2,
-        },
-        3: {
-          text: '南区',
-          status: 3,
-        },
-      },
-    },
-    {
-      title: '房屋类型',
-      dataIndex: 'className',
-      order: 99,
-      filters: true,
-      onFilter: true,
-      hideInTable: true, // 在查询表格不显示
-      editable:false, // 是否可编辑
-      valueType: 'select',
-      initialValue: 'all',
-      valueEnum: {
-        all: { text: '全部', status: 'Default' },
-        1: {
-          text: '铺面',
-          status: 1,
-        },
-        2: {
-          text: '仓库',
-          status: 2,
-          // disabled: true,
-        },
-        3: {
-          text: '房屋',
-          status: 3,
-        },
-      },
-    },
-    {
-      title: '栋号',
-      dataIndex: 'ridgepoleNum',
-      // copyable: true, // 是否复制
-      // hideInSearch:true, // 查询表单中不展示此项
-      hideInTable: true, // 在查询表格不显示
-      valueType: 'digit',
-      editable:false, // 是否可编辑
-
-    },
-    {
-      title: '门牌号',
-      dataIndex: 'houseNum',
-      // copyable: true, // 是否复制
-      // hideInSearch:true, // 查询表单中不展示此项
-      hideInTable: true, // 在查询表格不显示
-      valueType: 'digit',
-      editable:false, // 是否可编辑
-    },
-    {
-      title: '承租人',
-      dataIndex: 'userName',
-      width: 80,
-      editable:false, // 是否可编辑
-      // copyable: true, // 是否复制
-      // hideInSearch:true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-    },
-    {
-      title: '承租人联系方式',
-      dataIndex: 'phone',
-      width: 100,
-      editable:false, // 是否可编辑
-      // copyable: true, // 是否复制
-      // hideInSearch:true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-    },
-    {
-      title: '押金单号',
-      dataIndex: 'cashPledgeNum',
-      width: 80,
-      editable:false, // 是否可编辑
-      // copyable: true, // 是否复制
-      hideInSearch: true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-    },
-    {
-      title: '押金金额',
-      width: 80,
-      dataIndex: 'cashPledgeMoney',
-      valueType: 'money',
-      editable:false, // 是否可编辑
-      // copyable: true, // 是否复制
-      hideInSearch: true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-    },
-    {
-      title: '平方米',
-      dataIndex: 'squareMeter',
-      width: 100,
-      hideInSearch: true, // 查询表单中不展示此项
-      valueType: 'text',
-      editable:false, // 是否可编辑
-      render: (_: any) => {
-        return <span> {_ != '-' ? `${_}m\u00b2` : _}</span>;
-      },
-    },
-    {
-      title: '每平方米单价',
-      valueType: 'money',
-      dataIndex: 'squareMeterPrice',
-      width: 100,
-      editable:false, // 是否可编辑
-      hideInSearch: true, // 查询表单中不展示此项
-    },
-    {
-      title: '起租时间',
-      dataIndex: 'onHireDate',
-      width: 100,
-      key: 'since',
-      editable:false, // 是否可编辑
-      // copyable: true, // 是否复制
-      hideInSearch: true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-      valueType: 'date',
-    },
-    {
-      title: '合同编号',
-      dataIndex: 'contractNum',
-      width: 100,
-      editable:false, // 是否可编辑
-      hideInSearch: true, // 查询表单中不展示此项
-    },
-    {
-      title: '合同时间',
-      key: 'contractDate',
-      dataIndex: 'contractDate',
-      width: 100,
-      editable:false, // 是否可编辑
-      hideInSearch: true, // 查询表单中不展示此项
-      valueType: 'dateRange',
-    },
-
-    {
-      title: '缴费时间',
-      dataIndex: 'paymentDate',
-      width: 100,
-      editable:false, // 是否可编辑
-      // copyable: true, // 是否复制
-      hideInSearch: true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-      valueType: 'dateRange',
-    },
-    {
-      title: '缴费时间间隔',
-      dataIndex: 'payCostDate',
-      width: 80,
-      editable:false, // 是否可编辑
-      // copyable: true, // 是否复制
-      hideInSearch: true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-    },
-    {
-      title: '租金/月',
-      dataIndex: 'rent',
-      valueType: 'money',
-      tip: '面积 * 平方米单价',
-      width: 90,
-      editable:false,
-      // copyable: true, // 是否复制
-      hideInSearch: true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-    },
-    {
-      title: '卫生费',
-      dataIndex: 'sanitationCost',
-      valueType: 'money',
-      width: 80,
-      editable:false,
-      // copyable: true, // 是否复制
-      hideInSearch: true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-    },
-    {
-      title: '物业费',
-      dataIndex: 'property',
-      valueType: 'money',
-      width: 80,
-      editable:false,
-      // copyable: true, // 是否复制
-      hideInSearch: true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-    },
-    {
-      title: '免租金额',
-      dataIndex: 'amountOfFree',
-      valueType: 'money',
-      editable:false,
-      width: 100,
-      // copyable: true, // 是否复制
-      hideInSearch: true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-    },
-    {
-      title: '缴费方式',
-      width: 80,
-      editable:false,
-      dataIndex: 'paymentMethod',
-      hideInSearch: true, // 查询表单中不展示此项
-      valueEnum: {
-        xj: { text: '现金' },
-        yh: { text: '银行' },
-      },
-    },
-    {
-      title: '收款账号',
-      width: 80,
-      editable:false,
-      dataIndex: 'shroffAccount',
-      ellipsis: true, //标题过长会自动收缩
-      hideInSearch: true, // 查询表单中不展示此项
-    },
-    {
-      title: '收款金额',
-      dataIndex: 'moneyCollection',
-      valueType: 'money',
-      width: 80,
-      editable:false,
-      // copyable: true, // 是否复制
-      hideInSearch: true, // 查询表单中不展示此项
-      // hideInTable:true, // 在查询表格不显示
-      fixed: 'right',
-    },
-    {
-      title: '是否已收款',
-      width: 80,
-      dataIndex: 'collection',
-      // hideInSearch: true, // 查询表单中不展示此项
-      hideInTable:true, // 在查询表格不显示
-      valueType: 'select',
-      fixed: 'right',
-      editable:false,
-      fieldProps: {
-        options: [
-          {
-            label: '全部',
-            value: "all",
-
-          },
-          {
-            label: '已收款',
-            value: true,
-          },
-          {
-            label: '未收款',
-            value: false,
-
-          },
-        ],
-      },
-    },
-    {
-      title: '是否已收款',
-      width: 80,
-      dataIndex: 'collection',
-      hideInSearch: true, // 查询表单中不展示此项
-      valueType: 'select',
-      fixed: 'right',
-      fieldProps: {
-        options: [
-          {
-            label: '已收款',
-            value: true,
-          },
-          {
-            label: '未收款',
-            value: false,
-
-          },
-        ],
-      },
-      // render: (_: any, record: any) => (
-      //   <Space>
-      //     {/* <Tag color={nameColor(_).color}>{nameColor(_).name}</Tag> */}
-      //     {/* <Tag >{_}</Tag> */}
-      //   </Space>
-      // ),
-      render: (_: any, record: any) => {
-        if(record.collection == false){
-          return <Tag color={"#f50"}>{_}</Tag>
-        }else{
-          return <Tag color={"#2db7f5"}>{_}</Tag>
-        }
-      },
-    },
-
-    // {
-    //   title: '备注',
-    //   dataIndex: 'remark',
-    //   // copyable: true, // 是否复制
-    //   hideInSearch: true, // 查询表单中不展示此项
-    //   // hideInTable:true, // 在查询表格不显示
-    // },
 
     {
       title: '操作',
@@ -694,49 +311,17 @@ export default () => {
           key="editable"
           aria-disabled
           onClick={() => {
-            action?.startEditable?.(record.receiptId);
-            // setUpdateFromData({
-            //   ...updateFromData,
-            //   leaseFullName: record.leaseFullName,
-            //   key: record.key,
-            //   leaseStatus: record.leaseStatus,
-            // });
-            // updateFormRef.setFieldsValue(record);
-            // // if(record.invoice){
-            // //   updateFormRef.setFieldsValue({invoice: 'true'})
-            // // }else{
-
-            // // }
-            // setUpdateVisible(true);
+            setReletVisible(true);
+            // 设置表单全局变量
+            setReletFromData({
+              ...record,
+              id:record.id
+            });
+            setReletVisible(true);
           }}
         >
-          修改
+          删除用户
         </a>,
-        <a
-          onClick={() => {
-            printFun({...record})
-            // setOriginData({ ...record });
-            // setHistorySelectParams({ key: record?.key });
-            // setDrawerVisible(true);
-          }}
-          target="_blank"
-          rel="noopener noreferrer"
-          key="view"
-        >
-          打印收据
-        </a>,
-        // <TableDropdown
-        //   key="actionGroup"
-        //   onSelect={(item: any) => {
-        //     console.log(item)
-        //   }}
-        //   menus={[
-        //     { key: 'rentOut', name: '出租', title: '只有闲置中的房屋才能进行出租操作', disabled: record.leaseStatus == "idle" ? false : true },
-        //     { key: 'relet', name: '续租(合同续约)', title: '只有租赁中的房屋才能进行续租操作', disabled: record.leaseStatus == "underway" ? false : true },
-        //     { key: 'payment', name: '缴费(续费)', title: '只有租赁中的房屋才能进行续费操作', disabled: record.leaseStatus == "underway" ? false : true },
-        //     { key: 'surrender', name: '退租', title: '只有租赁中或免费的房屋才能进行退租操作', disabled: record.leaseStatus == "idle" ? true : false },
-        //   ]}
-        // />,
       ],
     },
   ];
@@ -746,14 +331,14 @@ export default () => {
   const RadioOnChange = e => {
     console.log('radio checked', e.target.value);
     setInitData({ ...initData, recentlSent: e.target.value });
-    setRequestParams({...requestParams, recentlSent:e.target.value})
-    shortNoteRequest.run({...requestParams, recentlSent:e.target.value})
+    setRequestParams({ ...requestParams, recentlSent: e.target.value })
+    shortNoteRequest.run({ ...requestParams, recentlSent: e.target.value })
   };
   function CheckboxOnChange(checkedValues) {
     console.log('checked = ', checkedValues);
     setInitData({ ...initData, dueToState: checkedValues });
-    setRequestParams({...requestParams, dueToState: checkedValues})
-    shortNoteRequest.run({...requestParams, dueToState: checkedValues})
+    setRequestParams({ ...requestParams, dueToState: checkedValues })
+    shortNoteRequest.run({ ...requestParams, dueToState: checkedValues })
   }
   const options = [
     { label: '缴费已逾期', value: 'payOverdue' },
@@ -782,14 +367,14 @@ export default () => {
           setrequeTotal(res.data.total);
           return {
             success: true,
-            data: res.data.items,
+            data: res.data.records,
           };
         }}
         editable={{
           type: 'multiple',
           actionRender: (row, config, defaultDom) => [defaultDom.save, defaultDom.cancel],
         }}
-        scroll={{ x: 2900 }}
+        scroll={{ x: 500 }}
         columnsState={{
           persistenceKey: 'pro-table-singe-demos',
           persistenceType: 'localStorage',
@@ -801,7 +386,7 @@ export default () => {
           defaultCollapsed: false,
           // span:3,
         }}
-        // search={false}
+        search={false}
         form={{
           // 由于配置了 transform，提交的参与与定义的不同这里需要转化一下
           syncToUrl: (values, type) => {
@@ -823,129 +408,245 @@ export default () => {
           total: requeTotal,
         }}
         dateFormatter="string"
-        headerTitle="缴费单记录"
+        headerTitle="用户列表"
         toolBarRender={() => [
-          <ModalForm<{
-            name: string;
-            company: string;
-          }>
-            title="导出excel--条件过滤"
-            trigger={
-              <Button type="primary" disabled>
-                <DownloadOutlined />
-                导出excel
-              </Button>
-            }
-
-            form={excelFormRef}
-            autoFocusFirstInput
-            modalProps={{
-              destroyOnClose: true,
-              // onCancel: () => console.log('run'),
-              okText: "导出excel"
-            }}
-            submitTimeout={2000}
-            onFinish={async (values) => {
-              await downRequest.run({...excelFormRef.getFieldsValue()});
-              console.log(values.name);
-              message.success('提交成功');
-              return true;
-            }}
+          <Button
+            key="button"
+            icon={<PlusOutlined />}
+            type="primary"
+            onClick={() => setVisible(true)}
           >
-            <ProFormTreeSelect
-            name="region"
-              initialValue={['all']}
-              label="区域分类"
-              width='md'
-              request={async () => [{
-                title: '不限',
-                value: 'all',
-                key: 'all',
-                children: [
-                  {
-                    title: '东区',
-                    value: 1,
-                    key: 1,
-                  },
-                  {
-                    title: '西区',
-                    value: 2,
-                    key: 2,
-                  },
-                  {
-                    title: "南区",
-                    value: 3,
-                    key: 3,
-                  },
-                ],
-              },]}
-              fieldProps={{
-                fieldNames: {
-                  label: 'title',
-                },
-                treeCheckable: true,
-                treeDefaultExpandAll:true,
-                showCheckedStrategy: TreeSelect.SHOW_PARENT,
-                placeholder: 'Please select',
-              }}
-            />
-              <ProFormTreeSelect
-            name="expireStatus"
-              initialValue={['all']}
-              label="到租状态"
-              width='md'
-              request={async () => [{
-                title: '不限',
-                value: 'all',
-                key: 'all',
-                children: [
-                  {
-                    title: '合同快到期',
-                    value: "contractPredict",
-                    key: "contractPredict",
-                  },
-                  {
-                    title: '合同已逾期',
-                    value: 'contractOverdue',
-                    key: 'contractOverdue',
-                  },
-                  {
-                    title: "缴费快到期",
-                    value: 'payPredict',
-                    key: 'payPredict',
-                  },
-                  {
-                    title: "缴费已逾期",
-                    value: 'payOverdue',
-                    key: 'payOverdue',
-                  },
-
-                  {
-                    title: "合同及缴费未到期",
-                    value: 'null',
-                    key: 'null',
-                  },
-                ],
-              },]}
-              fieldProps={{
-                fieldNames: {
-                  label: 'title',
-                },
-                treeCheckable: true,
-                treeDefaultExpandAll:true,
-                showCheckedStrategy: TreeSelect.SHOW_PARENT,
-                placeholder: 'Please select',
-              }}
-            />
-          </ModalForm>
-          // <Dropdown key="menu" overlay={menu}>
-          //   <Button>
-          //     <EllipsisOutlined />
-          //   </Button>
-          // </Dropdown>,
+            新增用户
+          </Button>,
         ]}
       />
+      {/* 新建功能分步表单 */}
+      <StepsForm
+        onFinish={async (values) => {
+          console.log('提交的所有数据', values);
 
+          // 新增图书接口
+          try {
+            console.log('发送参数', fromData);
+            const res = await sysUserAdd(fromData);
+            console.log('请求结束', res);
+            console.log(formRef2.getFieldsValue());
+
+            if (res.resSuccess) {
+              message.success('数据新建成功');
+              // // 初始化参数
+              // setFromData(fromDataInit);
+              // // 刷新数据
+              // actionRef.current?.reload();
+              reset_init_data();
+              setVisible(false); // 关闭弹出框
+              return true;
+            } else {
+              notification.error({
+                message: '接口异常',
+                description: '接口返回数据异常',
+              });
+              message.error('接口返回数据异常');
+              return false;
+            }
+          } catch (error) {
+            console.log('新增操作中接口异常抛出', error);
+            notification.error({
+              message: '通讯异常',
+              description: '与客户端通讯链接异常',
+            });
+            message.error('与客户端连接异常');
+            return false;
+          }
+        }}
+        formProps={{
+          validateMessages: {
+            required: '此项为必填项',
+          },
+        }}
+        stepsFormRender={(dom, submitter) => {
+          return (
+            <Modal
+              title={<a onClick={() => { windowsOpen("addHouse") }}>新建图书信息---[点击可查看功能说明]</a>}
+              width={900}
+              onCancel={() => setVisible(false)}
+              maskClosable={false}
+              visible={visible}
+              footer={submitter}
+              destroyOnClose
+            >
+              {dom}
+            </Modal>
+          );
+        }}
+      >
+        <StepsForm.StepForm
+          layout="vertical"
+          name="checkbox"
+          title="录入图书信息"
+          form={formRef2}
+          onFinish={async () => {
+            console.log('这是第二步');
+            console.log(formRef2.getFieldsValue());
+            const getData = formRef2.getFieldsValue()
+            // 将合约日期跟缴费日期 起租时间格式化
+            if (getData.juese == "admin") {
+              const request_post = {
+                ...formRef2.getFieldsValue(),
+                roleIds: [1],
+              };
+              setFromData({
+                ...fromData,
+                ...request_post,
+              });
+            } else {
+              const request_post = {
+                ...formRef2.getFieldsValue(),
+                roleIds: [2],
+              };
+              setFromData({
+                ...fromData,
+                ...request_post,
+              });
+            }
+
+
+
+            return true;
+          }}
+        >
+          {console.log('准备跳转到第二步', fromData.leaseStatus)}
+          <ProForm.Group >
+            <ProFormText width="xl" name="username" label="用户名" />
+            <ProFormText width="xl" name="password" label="密码" />
+            <ProFormSelect
+              label="对应角色"
+              name="juese"
+              rules={[
+                {
+                  required: true,
+                },
+              ]}
+              width="md"
+              initialValue="xuesheng"
+              options={[
+                { value: 'xuesheng', label: '学生' },
+                { value: 'admin', label: '管理员' },
+              ]}
+            />
+          </ProForm.Group>
+        </StepsForm.StepForm>
+        <StepsForm.StepForm name="time" title="确定图书信息">
+          <ProDescriptions
+            column={2}
+          // tooltip="包含了从服务器请求，columns等功能"
+          >
+
+            <ProDescriptions.Item span={2} label="用户">
+              {fromData.username}
+            </ProDescriptions.Item>
+            <ProDescriptions.Item span={2} label="密码">
+              {fromData.password}
+            </ProDescriptions.Item>
+            <ProDescriptions.Item
+              label="图书类型"
+              span={2}
+              valueEnum={{
+                admin: {
+                  text: '管理员',
+                  status: 'Error',
+                },
+                xuesheng: {
+                  text: '学生',
+                  status: 'Success',
+                },
+              }}
+            >
+              {/* {console.log('第三步信息', fromData)} */}
+              {fromData.juese}
+            </ProDescriptions.Item>
+
+          </ProDescriptions>
+        </StepsForm.StepForm>
+      </StepsForm>
+      {/* 删除功能分步表单 */}
+      <StepsForm
+        onFinish={async (values) => {
+          console.log('提交的所有数据', values);
+          try {
+            console.log('发送参数', reletFromData);
+
+            const res = await sysUserDeleteById(reletFromData);
+            console.log('请求结束', res);
+
+            if (res.resSuccess) {
+              message.success('删除用户成功');
+              // 初始化参数
+              reset_init_data();
+              // 刷新数据
+              actionRef.current?.reload();
+              setReletVisible(false); // 关闭弹出框
+              return true;
+            } else {
+              notification.error({
+                message: '接口异常',
+                description: '接口返回数据异常',
+              });
+              message.error('接口返回数据异常');
+
+              return false;
+            }
+          } catch (error: any) {
+            console.log('删除用户操作中接口异常抛出', error);
+            notification.error({
+              message: '通讯异常',
+              description: '与客户端通讯链接异常',
+            });
+            message.error('与客户端连接异常');
+            Modal.error({
+              title: '删除用户失败',
+              content: (
+                <div>
+                  <p>{`失败原因: ${error.data.ErrorInfo.errDec}`}</p>
+                  <p>{`失败代码: ${error.data.requestId}`}</p>
+                </div>
+              ),
+            });
+            return false;
+          }
+        }}
+        formProps={{
+          validateMessages: {
+            required: '此项为必填项',
+          },
+        }}
+        stepsFormRender={(dom, submitter) => {
+          return (
+            <Modal
+              // title="删除用户"
+              title={<a onClick={() => { windowsOpen("relet") }}>删除用户---[点击可查看功能说明]</a>}
+              width={800}
+              maskClosable={false}
+              onCancel={() => setReletVisible(false)}
+              visible={reletVisible}
+              footer={submitter}
+              destroyOnClose
+            >
+              {dom}
+            </Modal>
+          );
+        }}
+      >
+        <StepsForm.StepForm name="time" title="确定归还/借阅信息">
+          <ProDescriptions
+            column={2}
+          >
+            <ProDescriptions.Item span={2} label="用户名">
+              {reletFromData.username}
+            </ProDescriptions.Item>
+          </ProDescriptions>
+        </StepsForm.StepForm>
+      </StepsForm>
     </>
   );
 };

@@ -30,7 +30,7 @@ export async function getInitialState(): Promise<{
       const msg = await queryCurrentUser();
 
       // return msg.data;
-      return {...msg.data, name:msg.data?.short_name};
+      return {...msg.data, name:msg.data?.username};
     } catch (error) {
       history.push(loginPath);
     }
@@ -75,7 +75,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
     // </Link>,
     links: [
       <div><LinkOutlined /><span onClick={() => {
-        window.open('https://www.yuque.com/eggdan/kfm74n?# 《粮油市场网站操作指南》');
+        window.open('https://www.yuque.com/eggdan/il28ya?# 《数字海南--图书管理系统笔试题》');
       }} >详细教程文档</span></div>,
           // <Link to="/~docs">
           //   <BookOutlined />
@@ -131,7 +131,7 @@ const errorHandler = (error: any) => {
         message: `认证超时或者禁示访问`,
         description: '认证超时或者禁示访问，请重新登录',
       });
-      history.push('/user/login');
+      // history.push('/user/login');
     } else {
       notification.error({
         message: `请求错误 ${status}: ${url}`,
@@ -157,11 +157,11 @@ const errorHandler = (error: any) => {
 // const DOMAIN =
 //   process.env.NODE_ENV === 'production' ? `http://staging.qiuzhi99.com` : `http://localhost:6060`;
 const DOMAIN = process.env.REQUST_BASE_URL;
-
+console.log("测试登录接口1111111111111111111",DOMAIN)
 export const request: RequestConfig = {
   errorHandler,
   prefix: `${DOMAIN}`,
   headers: {
-    Authorization: `token ${localStorage.getItem('token')}`,
+    Authorization: `bearer ${localStorage.getItem('token')}`,
   },
 };
