@@ -637,7 +637,7 @@ export default () => {
           );
         }}
       >
-        <StepsForm.StepForm name="time" title="确定归还/借阅信息">
+        <StepsForm.StepForm name="time" title="确定删除信息">
           <ProDescriptions
             column={2}
           >
